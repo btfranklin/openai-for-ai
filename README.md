@@ -22,6 +22,11 @@ pdm run openai-for-ai build --spec-url https://app.stainless.com/api/spec/docume
 - `--out site/` writes the rendered HTML fragments and indexes into the `site/` directory that ships with the repo.
 
 ```shell
+pdm run openai-for-ai build
+```
+- With no flags, the builder uses the default remote spec, writes into `site/`, and includes the default language examples (`curl`, `python`).
+
+```shell
 pdm run openai-for-ai build --spec-path tests/data/openai.documented.yml --out tmp/site-preview
 ```
 - `--spec-path` reuses the bundled fixture for deterministic local runs.
