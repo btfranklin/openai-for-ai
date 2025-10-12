@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>OpenAI API Endpoint Catalog</title>
+</head>
+<body>
+  <main>
+    <article>
+      <header>
+        <h1>OpenAI API Endpoint Catalog</h1>
+        <p>Generated at {{ build_time.isoformat() }}</p>
+      </header>
+      {% for tag in tags %}
+      <section aria-labelledby="tag-{{ loop.index }}">
+        <header>
+          <h2 id="tag-{{ loop.index }}">{{ tag.tag }}</h2>
+        </header>
+        <ul>
+          {% for op in tag.operations %}
+          <li><a href="{{ op.url }}">{{ op.label }}</a>{% if op.summary %} — {{ op.summary }}{% endif %}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endfor %}
+      <footer>
+        <p>Spec compiled into semantic HTML endpoint blocks.</p>
+      </footer>
+    </article>
+  </main>
+</body>
+</html>

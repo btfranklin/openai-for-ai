@@ -1,0 +1,184 @@
+{{ front_matter -}}
+<!-- build_sha:{{ build_sha }} build_date:{{ build_date }} -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ title }}</title>
+</head>
+<body>
+  <main>
+    <article>
+      <header>
+        <h1>{{ title }}</h1>
+        {% if block.summary %}
+        <p><strong>{{ block.summary|markdown_links }}</strong></p>
+        {% endif %}
+        {% if block.description %}
+        <p>{{ block.description|markdown_links }}</p>
+        {% endif %}
+      </header>
+
+      {% for group in parameter_groups %}
+      <section aria-labelledby="params-{{ loop.index }}">
+        <header>
+          <h2 id="params-{{ loop.index }}">{{ group.label }}</h2>
+        </header>
+        <table>
+          <thead>
+            <tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Required</th><th scope="col">Description</th></tr>
+          </thead>
+          <tbody>
+          {% for param in group.entries %}
+            <tr>
+              <th scope="row">{{ param.name }}</th>
+              <td>{% if param.type %}{{ param.type }}{% else %}-{% endif %}</td>
+              <td>{% if param.required %}yes{% else %}no{% endif %}</td>
+              <td>
+                {% if param.description %}{{ param.description|markdown_links }}{% else %}-{% endif %}
+                {% if param.enum %}
+                <br><small>Allowed: {{ param.enum|join(", ") }}</small>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endfor %}
+
+      {% if request_bodies %}
+      <section aria-labelledby="request-body">
+        <header>
+          <h2 id="request-body">Request Body</h2>
+        </header>
+        {% for body in request_bodies %}
+        <section aria-labelledby="request-body-{{ loop.index }}">
+          <header>
+            <h3 id="request-body-{{ loop.index }}">{{ body.content_type }}</h3>
+          </header>
+          {% if body.schema_href %}
+          <p>Schema: <a href="{{ body.schema_href }}">{{ body.schema_ref }}</a></p>
+          {% elif body.schema_ref %}
+          <p>Schema: {{ body.schema_ref }}</p>
+          {% endif %}
+          {% if body.description %}
+          <p>{{ body.description|markdown_links }}</p>
+          {% endif %}
+          {% if body.examples %}
+          <section aria-label="Request body examples">
+            <header>
+              <h4>Examples</h4>
+            </header>
+            {% for example in body.examples %}
+            <article>
+              <header>
+                <p><strong>{{ example.label }}</strong></p>
+              </header>
+              <pre><code>{{ example.value|jsonify }}</code></pre>
+            </article>
+            {% endfor %}
+          </section>
+          {% endif %}
+        </section>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      {% if responses %}
+      <section aria-labelledby="responses">
+        <header>
+          <h2 id="responses">Responses</h2>
+        </header>
+        <table>
+          <thead>
+            <tr><th scope="col">Status</th><th scope="col">Description</th></tr>
+          </thead>
+          <tbody>
+          {% for response in responses %}
+            <tr>
+              <th scope="row">{{ response.status }}</th>
+              <td>{% if response.description %}{{ response.description|markdown_links }}{% else %}-{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+
+        {% for response in responses %}
+          {% if response.content %}
+          {% set response_idx = loop.index %}
+          <section aria-labelledby="response-{{ response_idx }}">
+            <header>
+              <h3 id="response-{{ response_idx }}">Status {{ response.status }}</h3>
+            </header>
+            {% for content in response.content %}
+            {% set content_idx = loop.index %}
+            <section aria-labelledby="response-{{ response_idx }}-{{ content_idx }}">
+              <header>
+                <h4 id="response-{{ response_idx }}-{{ content_idx }}">{{ content.content_type }}</h4>
+              </header>
+              {% if content.schema_href %}
+              <p>Schema: <a href="{{ content.schema_href }}">{{ content.schema_ref }}</a></p>
+              {% elif content.schema_ref %}
+              <p>Schema: {{ content.schema_ref }}</p>
+              {% endif %}
+              {% if content.examples %}
+              <section aria-label="Response examples">
+                <header>
+                  <h5>Examples</h5>
+                </header>
+                {% for example in content.examples %}
+                <article>
+                  <header>
+                    <p><strong>{{ example.label }}</strong></p>
+                  </header>
+                  <pre><code>{{ example.value|jsonify }}</code></pre>
+                </article>
+                {% endfor %}
+              </section>
+              {% endif %}
+            </section>
+            {% endfor %}
+          </section>
+          {% endif %}
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      {% if examples %}
+      <section aria-labelledby="examples">
+        <header>
+          <h2 id="examples">Examples</h2>
+        </header>
+        {% for lang, code in examples.items() %}
+        <article>
+          <header>
+            <h3>{{ lang }}</h3>
+          </header>
+          <pre><code>{{ code }}</code></pre>
+        </article>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      {% if siblings or referenced_components %}
+      <nav aria-labelledby="see-also">
+        <h2 id="see-also">See Also</h2>
+        <ul>
+          {% for sibling in siblings %}
+          <li><a href="{{ sibling.url }}">{{ sibling.label }}</a>{% if sibling.summary %} — {{ sibling.summary }}{% endif %}</li>
+          {% endfor %}
+          {% for component in referenced_components %}
+          <li><a href="{{ component.url }}">{{ component.label }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% endif %}
+
+      <footer>
+        <p>Generated on {{ build_date }} from spec {{ build_sha }}.</p>
+      </footer>
+    </article>
+  </main>
+</body>
+</html>

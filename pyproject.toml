@@ -1,0 +1,38 @@
+[project]
+name = "openai-for-ai"
+version = "0.1.0"
+description = "An automation tool to convert the latest OpenAI API spec in YAML to a format more suitable for consumption by LLMs"
+authors = [
+    {name = "B.T. Franklin", email = "brandon.franklin@gmail.com"},
+]
+dependencies = [
+    "click>=8.1.7",
+    "httpx>=0.26.0",
+    "jinja2>=3.1.2",
+    "pyyaml>=6.0.1",
+    "markupsafe>=3.0.3",
+]
+requires-python = ">=3.12"
+readme = "README.md"
+license = {text = "MIT"}
+
+[project.scripts]
+openai-for-ai = "openai_for_ai.cli:main"
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[tool.pdm.dev-dependencies]
+test = [
+    "pytest>=8.0.0",
+]
+
+
+[tool.pdm]
+distribution = true
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]

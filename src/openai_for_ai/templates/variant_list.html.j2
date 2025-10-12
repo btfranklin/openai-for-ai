@@ -1,0 +1,48 @@
+<ul>
+  {% set variants = variants if variants is defined else [] %}
+  {% for variant in variants %}
+  <li>
+    {% if variant.schema_href %}
+      <a href="{{ variant.schema_href }}">{{ variant.schema_ref }}</a>
+    {% elif variant.schema_ref %}
+      {{ variant.schema_ref }}
+    {% elif variant.title %}
+      {{ variant.title }}
+    {% else %}
+      Variant {{ loop.index }}
+    {% endif %}
+    {% if variant.description %} — {{ variant.description|markdown_links }}{% endif %}
+
+    {% if variant.schema and not variant.schema_ref %}
+    <details>
+      <summary>Schema details</summary>
+      <pre><code>{{ variant.schema|jsonify }}</code></pre>
+    </details>
+    {% endif %}
+
+    {% if variant.any_of %}
+    <section aria-label="Nested anyOf">
+      <header><h4>Any Of</h4></header>
+      {% set variants = variant.any_of %}
+      {% include "variant_list.html.j2" with context %}
+    </section>
+    {% endif %}
+
+    {% if variant.one_of %}
+    <section aria-label="Nested oneOf">
+      <header><h4>One Of</h4></header>
+      {% set variants = variant.one_of %}
+      {% include "variant_list.html.j2" with context %}
+    </section>
+    {% endif %}
+
+    {% if variant.all_of %}
+    <section aria-label="Nested allOf">
+      <header><h4>All Of</h4></header>
+      {% set variants = variant.all_of %}
+      {% include "variant_list.html.j2" with context %}
+    </section>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>

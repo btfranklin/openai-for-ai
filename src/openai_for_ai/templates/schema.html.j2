@@ -1,0 +1,100 @@
+{{ front_matter -}}
+<!-- build_sha:{{ build_sha }} build_date:{{ build_date }} -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ schema.name }}</title>
+</head>
+<body>
+  <main>
+    <article>
+      <header>
+        <h1>{{ schema.name }}</h1>
+        {% if schema.description %}
+        <p>{{ schema.description|markdown_links }}</p>
+        {% endif %}
+      </header>
+
+      {% if properties %}
+      <section aria-labelledby="properties">
+        <header>
+          <h2 id="properties">Properties</h2>
+        </header>
+        <table>
+          <thead>
+            <tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Required</th><th scope="col">Description</th></tr>
+          </thead>
+          <tbody>
+          {% for prop in properties %}
+            <tr>
+              <th scope="row">
+                {{ prop.name }}
+                {% if prop.schema_href %}
+                <br><small><a href="{{ prop.schema_href }}">See {{ prop.schema_ref }}</a></small>
+                {% endif %}
+              </th>
+              <td>{% if prop.type %}{{ prop.type }}{% else %}-{% endif %}</td>
+              <td>{% if prop.required %}yes{% else %}no{% endif %}</td>
+              <td>
+                {% if prop.description %}{{ prop.description|markdown_links }}{% else %}-{% endif %}
+                {% if prop.enum %}
+                <br><small>Allowed: {{ prop.enum|join(", ") }}</small>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </section>
+      {% endif %}
+
+      {% if any_of %}
+      <section aria-labelledby="any-of">
+        <header>
+          <h2 id="any-of">Any Of</h2>
+        </header>
+        {% include "variant_list.html.j2" with context %}
+      </section>
+      {% endif %}
+
+      {% if one_of %}
+      <section aria-labelledby="one-of">
+        <header>
+          <h2 id="one-of">One Of</h2>
+        </header>
+        {% set variants = one_of %}
+        {% include "variant_list.html.j2" with context %}
+      </section>
+      {% endif %}
+
+      {% if all_of %}
+      <section aria-labelledby="all-of">
+        <header>
+          <h2 id="all-of">All Of</h2>
+        </header>
+        {% set variants = all_of %}
+        {% include "variant_list.html.j2" with context %}
+      </section>
+      {% endif %}
+
+      {% if schema.examples %}
+      <section aria-labelledby="examples">
+        <header>
+          <h2 id="examples">Examples</h2>
+        </header>
+        {% for example in schema.examples %}
+        <article>
+          <pre><code>{{ example|jsonify }}</code></pre>
+        </article>
+        {% endfor %}
+      </section>
+      {% endif %}
+
+      <footer>
+        <p>Generated on {{ build_date }} from spec {{ build_sha }}.</p>
+      </footer>
+    </article>
+  </main>
+</body>
+</html>
