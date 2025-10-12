@@ -20,3 +20,7 @@ pdm run pytest
 ```
 
 The integration tests exercise the full build pipeline against the real OpenAI OpenAPI specification bundled under `tests/data/openai.documented.yml`. Ensure optional dependencies (e.g., Jinja2) are installed so these tests execute instead of being skipped.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
