@@ -1,4 +1,5 @@
 # openai-for-ai
+![openai-for-ai social preview](.github/social%20preview/openai-for-ai_social_preview.png)
 
 A CLI for compiling the OpenAI OpenAPI specification into deterministic, LLM-friendly HTML blocks and discovery manifests.
 
