@@ -1,6 +1,7 @@
 # openai-for-ai
 
 ![openai-for-ai banner](https://raw.githubusercontent.com/btfranklin/openai-for-ai/main/.github/social%20preview/openai-for-ai_social_preview.png "openai-for-ai")
+[![Build Status](https://github.com/btfranklin/openai-for-ai/actions/workflows/python-app.yml/badge.svg)](https://github.com/btfranklin/openai-for-ai/actions/workflows/python-app.yml)
 
 A CLI for compiling the OpenAI OpenAPI specification into deterministic, LLM-friendly HTML blocks and discovery manifests.
 
