@@ -45,7 +45,7 @@ def load_spec(
 
     headers: dict[str, str] = {}
     if etag_path.exists():
-        etag_value = etag_path.read_text().strip()
+        etag_value = etag_path.read_text(encoding="utf-8").strip()
         if etag_value:
             headers["If-None-Match"] = etag_value
 
@@ -55,20 +55,20 @@ def load_spec(
 
             if response.status_code == httpx.codes.NOT_MODIFIED:
                 if spec_path.exists():
-                    raw_text = spec_path.read_text()
+                    raw_text = spec_path.read_text(encoding="utf-8")
                 else:
                     response = client.get(spec_url)
                     response.raise_for_status()
                     raw_text = response.text
-                    spec_path.write_text(raw_text)
+                    spec_path.write_text(raw_text, encoding="utf-8")
                     if etag := response.headers.get("ETag"):
-                        etag_path.write_text(etag)
+                        etag_path.write_text(etag, encoding="utf-8")
             else:
                 response.raise_for_status()
                 raw_text = response.text
-                spec_path.write_text(raw_text)
+                spec_path.write_text(raw_text, encoding="utf-8")
                 if etag := response.headers.get("ETag"):
-                    etag_path.write_text(etag)
+                    etag_path.write_text(etag, encoding="utf-8")
     except (httpx.HTTPError, OSError) as exc:
         raise SpecLoadError(
             f"Failed to fetch spec from {spec_url}"

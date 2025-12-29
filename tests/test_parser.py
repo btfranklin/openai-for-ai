@@ -85,6 +85,67 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(schema.name, "ListAssistantsResponse")
         self.assertTrue(schema.properties[0]["required"])
 
+    def test_parse_operations_collects_nested_models(self) -> None:
+        spec = {
+            "openapi": "3.1.0",
+            "paths": {
+                "/widgets": {
+                    "post": {
+                        "requestBody": {
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": (
+                                                "#/components/schemas/"
+                                                "Widget"
+                                            )
+                                        },
+                                    }
+                                }
+                            }
+                        },
+                        "responses": {
+                            "200": {
+                                "description": "OK",
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "anyOf": [
+                                                {
+                                                    "$ref": (
+                                                        "#/components/"
+                                                        "schemas/"
+                                                        "WidgetResponse"
+                                                    )
+                                                },
+                                                {"type": "string"},
+                                            ]
+                                        }
+                                    }
+                                },
+                            }
+                        },
+                    }
+                }
+            },
+            "components": {
+                "schemas": {
+                    "Widget": {"type": "object"},
+                    "WidgetResponse": {"type": "object"},
+                }
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            result = parse_operations(spec, sha="123abc", out_dir=out_dir)
+
+        block = result.all_operations[0]
+        self.assertEqual(block.models_in, ["Widget"])
+        self.assertEqual(block.models_out, ["WidgetResponse"])
+
     def test_parse_schemas_any_of_normalization(self) -> None:
         spec = {
             "openapi": "3.1.0",

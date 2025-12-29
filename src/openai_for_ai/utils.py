@@ -84,8 +84,7 @@ def extract_models(
             )
             if not schema:
                 continue
-            if ref := extract_ref_name(schema.get("$ref")):
-                models_in.add(ref)
+            _collect_schema_refs(schema, models_in)
 
     if responses:
         for resp in responses.values():
@@ -104,10 +103,45 @@ def extract_models(
                 )
                 if not schema:
                     continue
-                if ref := extract_ref_name(schema.get("$ref")):
-                    models_out.add(ref)
+                _collect_schema_refs(schema, models_out)
 
     return sorted(models_in), sorted(models_out)
+
+
+def _collect_schema_refs(
+    schema: Any,
+    refs: set[str],
+    *,
+    prefix: str = "#/components/schemas/",
+    seen: set[int] | None = None,
+) -> None:
+    if schema is None:
+        return
+    if seen is None:
+        seen = set()
+
+    if isinstance(schema, dict):
+        obj_id = id(schema)
+        if obj_id in seen:
+            return
+        seen.add(obj_id)
+
+        ref_value = schema.get("$ref")
+        if isinstance(ref_value, str):
+            if ref_name := extract_ref_name(ref_value, prefix=prefix):
+                refs.add(ref_name)
+
+        for value in schema.values():
+            _collect_schema_refs(value, refs, prefix=prefix, seen=seen)
+        return
+
+    if isinstance(schema, list):
+        obj_id = id(schema)
+        if obj_id in seen:
+            return
+        seen.add(obj_id)
+        for item in schema:
+            _collect_schema_refs(item, refs, prefix=prefix, seen=seen)
 
 
 def ensure_trailing_slash(path: str) -> str:

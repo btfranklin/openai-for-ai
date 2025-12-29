@@ -110,7 +110,11 @@ def _write_indexes(
     sha: str,
     build_date: datetime,
 ) -> None:
-    index_html = render_index(operations.by_tag, out_dir=out_dir)
+    index_html = render_index(
+        operations.by_tag,
+        out_dir=out_dir,
+        build_date=build_date,
+    )
     (out_dir / "index.html").write_text(index_html, encoding="utf-8")
 
     llms_txt = _render_llms_index(operations, out_dir)

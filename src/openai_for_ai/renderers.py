@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -150,6 +150,7 @@ def render_index(
     operations_by_tag: dict[str, list[OperationBlock]],
     *,
     out_dir: Path,
+    build_date: datetime,
 ) -> str:
     env = _environment()
     template = env.get_template("index.html.j2")
@@ -171,7 +172,7 @@ def render_index(
                 ],
             }
         )
-    return template.render(tags=tags, build_time=datetime.now(timezone.utc))
+    return template.render(tags=tags, build_time=build_date)
 
 
 def relative_url(from_path: Path, to_path: Path) -> str:
