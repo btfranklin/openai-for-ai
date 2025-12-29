@@ -162,7 +162,10 @@ def render_index(
                     {
                         "label": f"{op.method} {op.path}",
                         "summary": op.summary,
-                        "url": f"{tag}/{op.output_path.name}",
+                        "url": relative_url(
+                            out_dir / "index.html",
+                            op.output_path,
+                        ),
                     }
                     for op in ops
                 ],

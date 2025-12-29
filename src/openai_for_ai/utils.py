@@ -7,6 +7,7 @@ from markupsafe import Markup, escape
 
 
 _PATH_SLUG_RE = re.compile(r"[^A-Za-z0-9\-_{}]+")
+_SEGMENT_SLUG_RE = re.compile(r"[^A-Za-z0-9\-_]+")
 _DASH_RE = re.compile(r"-{2,}")
 _MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\((https?://[^\s)]+)\)")
 
@@ -19,14 +20,24 @@ def normalize_path_to_slug(path: str) -> str:
     return slug.strip("-")
 
 
+def sanitize_path_segment(value: str, fallback: str) -> str:
+    if not value:
+        return fallback
+    slug = _SEGMENT_SLUG_RE.sub("-", value.strip())
+    slug = _DASH_RE.sub("-", slug)
+    slug = slug.strip("-")
+    return slug or fallback
+
+
 def collect_parameters(
     *sources: Iterable[dict[str, Any]] | None,
 ) -> list[dict[str, Any]]:
     """Merge parameter definitions, preserving order and removing duplicates.
 
-    Deduplication uses (name, in).
+    Deduplication uses (name, in), with later entries overriding earlier ones.
     """
     seen: set[tuple[str, str]] = set()
+    index_by_key: dict[tuple[str, str], int] = {}
     merged: list[dict[str, Any]] = []
     for params in sources:
         if not params:
@@ -38,8 +49,10 @@ def collect_parameters(
                 continue
             key = (name, loc)
             if key in seen:
+                merged[index_by_key[key]] = param
                 continue
             seen.add(key)
+            index_by_key[key] = len(merged)
             merged.append(param)
     return merged
 

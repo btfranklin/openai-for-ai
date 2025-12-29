@@ -14,6 +14,8 @@ pdm run openai-for-ai build --spec-url https://app.stainless.com/api/spec/docume
 
 This fetches the latest spec (with ETag-based caching), renders operation and component pages beneath `site/`, and generates helper indexes such as `llms.txt`, `manifest.json`, and `blocks/index.json`.
 
+Output paths are derived from tag and schema names but are sanitized into safe path segments.
+
 Use `pdm run openai-for-ai build --help` to see all available options.
 
 ## CLI Examples

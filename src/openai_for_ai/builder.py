@@ -68,9 +68,8 @@ def _write_operations(
     languages: list[str],
 ) -> None:
     for tag, ops in operations.by_tag.items():
-        tag_dir = out_dir / tag
-        tag_dir.mkdir(parents=True, exist_ok=True)
         for block in ops:
+            block.output_path.parent.mkdir(parents=True, exist_ok=True)
             html = render_operation(
                 block,
                 schema_paths=schema_paths,
@@ -114,10 +113,10 @@ def _write_indexes(
     index_html = render_index(operations.by_tag, out_dir=out_dir)
     (out_dir / "index.html").write_text(index_html, encoding="utf-8")
 
-    llms_txt = _render_llms_index(operations)
+    llms_txt = _render_llms_index(operations, out_dir)
     (out_dir / "llms.txt").write_text(llms_txt, encoding="utf-8")
 
-    manifest = _build_manifest(operations)
+    manifest = _build_manifest(operations, out_dir)
     (out_dir / "manifest.json").write_text(
         json.dumps(manifest, indent=2),
         encoding="utf-8",
@@ -125,17 +124,20 @@ def _write_indexes(
 
     blocks_dir = out_dir / "blocks"
     blocks_dir.mkdir(parents=True, exist_ok=True)
-    blocks_json = _build_blocks_index(operations, sha, build_date)
+    blocks_json = _build_blocks_index(operations, out_dir, sha, build_date)
     (blocks_dir / "index.json").write_text(
         json.dumps(blocks_json, indent=2),
         encoding="utf-8",
     )
 
-    sitemap = _build_sitemap(operations, schema_paths)
+    sitemap = _build_sitemap(operations, schema_paths, out_dir)
     (out_dir / "sitemap.xml").write_text(sitemap, encoding="utf-8")
 
 
-def _render_llms_index(operations: OperationParseResult) -> str:
+def _render_llms_index(
+    operations: OperationParseResult,
+    out_dir: Path,
+) -> str:
     lines = [
         "# OpenAI API Endpoint Blocks",
         "",
@@ -169,7 +171,7 @@ def _render_llms_index(operations: OperationParseResult) -> str:
         lines.append(
             f"- **{tag}** — {len(ops)} operations. Start with "
             f"[{primary.method} {primary.path}]"
-            f"(/{primary.tag}/{primary.output_path.name}): {summary}"
+            f"({_output_url(out_dir, primary.output_path)}): {summary}"
         )
 
     lines.extend([
@@ -182,19 +184,22 @@ def _render_llms_index(operations: OperationParseResult) -> str:
         descriptor = (op.summary or op.description or "").strip()
         descriptor_text = f" — {descriptor}" if descriptor else ""
         lines.append(
-            f"- [{op.block_id}](/{op.tag}/{op.output_path.name}): "
+            f"- [{op.block_id}]({_output_url(out_dir, op.output_path)}): "
             f"{op.method} {op.path}{descriptor_text}"
         )
 
     return "\n".join(lines)
 
 
-def _build_manifest(operations: OperationParseResult) -> dict[str, Any]:
+def _build_manifest(
+    operations: OperationParseResult,
+    out_dir: Path,
+) -> dict[str, Any]:
     manifest: dict[str, Any] = {}
     for op in operations.all_operations:
         key = op.operation_id or op.block_id
         manifest[key] = {
-            "url": f"/{op.tag}/{op.output_path.name}",
+            "url": _output_url(out_dir, op.output_path),
             "method": op.method,
             "path": op.path,
             "tag": op.tag,
@@ -205,6 +210,7 @@ def _build_manifest(operations: OperationParseResult) -> dict[str, Any]:
 
 def _build_blocks_index(
     operations: OperationParseResult,
+    out_dir: Path,
     sha: str,
     build_date: datetime,
 ) -> dict[str, Any]:
@@ -219,7 +225,7 @@ def _build_blocks_index(
                 "operation_id": op.operation_id,
                 "summary": op.summary,
                 "description": op.description,
-                "url": f"/{op.tag}/{op.output_path.name}",
+                "url": _output_url(out_dir, op.output_path),
                 "models_in": op.models_in,
                 "models_out": op.models_out,
                 "parameters": op.parameters,
@@ -236,6 +242,7 @@ def _build_blocks_index(
 def _build_sitemap(
     operations: OperationParseResult,
     schema_paths: dict[str, Path],
+    out_dir: Path,
 ) -> str:
     urls = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -245,11 +252,17 @@ def _build_sitemap(
     urls.append("<url><loc>/llms.txt</loc></url>")
     for op in operations.all_operations:
         urls.append(
-            f"<url><loc>/{op.tag}/{op.output_path.name}</loc></url>"
+            f"<url><loc>{_output_url(out_dir, op.output_path)}</loc></url>"
         )
     for name in sorted(schema_paths.keys()):
+        schema_path = schema_paths[name]
         urls.append(
-            f"<url><loc>/components/schemas/{name}.html</loc></url>"
+            f"<url><loc>{_output_url(out_dir, schema_path)}</loc></url>"
         )
     urls.append("</urlset>")
     return "\n".join(urls)
+
+
+def _output_url(out_dir: Path, output_path: Path) -> str:
+    rel_path = output_path.relative_to(out_dir).as_posix()
+    return f"/{rel_path}"

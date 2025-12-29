@@ -146,6 +146,48 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(param["type"], "integer")
         self.assertEqual(param["description"], "Max results")
 
+    def test_parse_operations_prefers_operation_parameters(self) -> None:
+        spec = {
+            "openapi": "3.1.0",
+            "paths": {
+                "/widgets/{widget_id}": {
+                    "parameters": [
+                        {
+                            "name": "widget_id",
+                            "in": "path",
+                            "required": False,
+                            "description": "path default",
+                            "schema": {"type": "string"},
+                        }
+                    ],
+                    "get": {
+                        "parameters": [
+                            {
+                                "name": "widget_id",
+                                "in": "path",
+                                "required": True,
+                                "description": "operation override",
+                                "schema": {"type": "string"},
+                            }
+                        ],
+                        "responses": {"200": {"description": "OK"}},
+                    },
+                }
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            result = parse_operations(spec, sha="123abc", out_dir=out_dir)
+
+        block = result.all_operations[0]
+        self.assertEqual(len(block.parameters), 1)
+        self.assertTrue(block.parameters[0]["required"])
+        self.assertEqual(
+            block.parameters[0]["description"],
+            "operation override",
+        )
+
     def test_collect_examples_includes_falsy_values(self) -> None:
         examples = collect_examples({"example": 0})
         self.assertEqual(examples[0]["label"], "default")
@@ -156,6 +198,45 @@ class ParserTests(unittest.TestCase):
 
         examples = collect_examples({"example": False})
         self.assertEqual(examples[0]["value"], False)
+
+    def test_parse_operations_sanitizes_tag_paths(self) -> None:
+        spec = {
+            "openapi": "3.1.0",
+            "paths": {
+                "/weird": {
+                    "get": {
+                        "tags": ["../Weird/Tag"],
+                        "responses": {"200": {"description": "OK"}},
+                    }
+                }
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            result = parse_operations(spec, sha="123abc", out_dir=out_dir)
+
+        block = result.all_operations[0]
+        self.assertTrue(block.output_path.is_relative_to(out_dir))
+        self.assertEqual(block.output_path.parent.name, "Weird-Tag")
+
+    def test_parse_schemas_sanitizes_schema_paths(self) -> None:
+        spec = {
+            "openapi": "3.1.0",
+            "components": {
+                "schemas": {
+                    "../Danger/Schema": {"type": "object"},
+                }
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            schemas = parse_schemas(spec, sha="abc123", out_dir=out_dir)
+
+        schema = schemas[0]
+        self.assertTrue(schema.output_path.is_relative_to(out_dir))
+        self.assertEqual(schema.output_path.name, "Danger-Schema.html")
 
 
 if __name__ == "__main__":  # pragma: no cover

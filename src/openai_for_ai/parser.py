@@ -11,6 +11,7 @@ from .utils import (
     extract_models,
     extract_ref_name,
     normalize_path_to_slug,
+    sanitize_path_segment,
 )
 
 VALID_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
@@ -53,10 +54,11 @@ def parse_operations(
                 continue
             tags = operation.get("tags") or ["untagged"]
             tag = str(tags[0])
+            tag_slug = sanitize_path_segment(tag, "untagged")
             op_id = operation.get("operationId")
             block_id = build_block_id(tag, op_id, method_upper, path)
             page_name = f"{method_upper}-{normalize_path_to_slug(path)}.html"
-            tag_dir = out_dir / tag
+            tag_dir = out_dir / tag_slug
             output_path = tag_dir / page_name
 
             op_params = resolve_parameters(
@@ -263,7 +265,10 @@ def parse_schemas(
             examples=extract_schema_examples(schema),
             sha=sha,
             output_path=(
-                out_dir / "components" / "schemas" / f"{name}.html"
+                out_dir
+                / "components"
+                / "schemas"
+                / f"{sanitize_path_segment(name, 'schema')}.html"
             ),
         )
         results.append(block)
