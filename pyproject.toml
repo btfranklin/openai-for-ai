@@ -15,6 +15,18 @@ dependencies = [
 requires-python = ">=3.12"
 readme = "README.md"
 license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Code Generators",
+]
 
 [project.scripts]
 openai-for-ai = "openai_for_ai.cli:main"
@@ -23,16 +35,15 @@ openai-for-ai = "openai_for_ai.cli:main"
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
-[tool.pdm.dev-dependencies]
-test = [
-    "pytest>=8.0.0",
-]
-
-
 [tool.pdm]
 distribution = true
 
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
+    "flake8>=7.3.0",
 ]
+
+[tool.pdm.scripts]
+test = "pytest"
+lint = "flake8 src tests"
