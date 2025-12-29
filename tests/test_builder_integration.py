@@ -7,7 +7,8 @@ from pathlib import Path
 
 try:
     import jinja2  # type: ignore
-except ModuleNotFoundError:  # pragma: no cover - optional runtime dependency for tests
+except ModuleNotFoundError:
+    # pragma: no cover - optional runtime dependency for tests
     jinja2 = None  # type: ignore[assignment]
 
 if jinja2 is not None:  # pragma: no branch - simplify import control
@@ -21,7 +22,9 @@ class BuilderIntegrationTests(unittest.TestCase):
     def setUp(self) -> None:
         if jinja2 is None or BuildConfig is None or build is None:
             self.skipTest("Jinja2 dependency is not installed")
-        self.spec_path = Path(__file__).parent / "data" / "openai.documented.yml"
+        self.spec_path = (
+            Path(__file__).parent / "data" / "openai.documented.yml"
+        )
         if not self.spec_path.exists():
             self.skipTest("Spec fixture is not available")
 
@@ -38,8 +41,14 @@ class BuilderIntegrationTests(unittest.TestCase):
             manifest_path = out_dir / "manifest.json"
             llms_path = out_dir / "llms.txt"
 
-            self.assertTrue(manifest_path.exists(), "manifest.json was not created")
-            self.assertTrue(llms_path.exists(), "llms.txt was not created")
+            self.assertTrue(
+                manifest_path.exists(),
+                "manifest.json was not created",
+            )
+            self.assertTrue(
+                llms_path.exists(),
+                "llms.txt was not created",
+            )
 
             manifest = json.loads(manifest_path.read_text())
             self.assertGreater(len(manifest), 0)
@@ -49,7 +58,12 @@ class BuilderIntegrationTests(unittest.TestCase):
             self.assertTrue(llms_body.startswith("# "))
             self.assertIn("## OPTIONAL", llms_body)
 
-            stream_event_path = out_dir / "components" / "schemas" / "ResponseStreamEvent.html"
+            stream_event_path = (
+                out_dir
+                / "components"
+                / "schemas"
+                / "ResponseStreamEvent.html"
+            )
             if stream_event_path.exists():
                 html = stream_event_path.read_text()
                 self.assertIn("<ul>", html)

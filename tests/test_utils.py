@@ -4,13 +4,23 @@ import unittest
 
 from markupsafe import Markup
 
-from openai_for_ai.utils import collect_parameters, markdown_links_to_html, normalize_path_to_slug
+from openai_for_ai.utils import (
+    collect_parameters,
+    markdown_links_to_html,
+    normalize_path_to_slug,
+)
 
 
 class UtilsTests(unittest.TestCase):
     def test_normalize_path_to_slug(self) -> None:
-        self.assertEqual(normalize_path_to_slug("/assistants/{assistant_id}"), "assistants-{assistant_id}")
-        self.assertEqual(normalize_path_to_slug("//audio//speech"), "audio-speech")
+        self.assertEqual(
+            normalize_path_to_slug("/assistants/{assistant_id}"),
+            "assistants-{assistant_id}",
+        )
+        self.assertEqual(
+            normalize_path_to_slug("//audio//speech"),
+            "audio-speech",
+        )
 
     def test_collect_parameters_deduplicates(self) -> None:
         merged = collect_parameters(
@@ -30,9 +40,14 @@ class UtilsTests(unittest.TestCase):
         self.assertIn(("order", "query"), names)
 
     def test_markdown_links_to_html(self) -> None:
-        rendered = markdown_links_to_html("Read the [docs](https://example.com/docs).")
+        rendered = markdown_links_to_html(
+            "Read the [docs](https://example.com/docs)."
+        )
         self.assertIsInstance(rendered, Markup)
-        self.assertIn('<a href="https://example.com/docs">docs</a>', str(rendered))
+        self.assertIn(
+            '<a href="https://example.com/docs">docs</a>',
+            str(rendered),
+        )
         self.assertTrue(str(rendered).startswith("Read the "))
 
 

@@ -31,8 +31,12 @@ class OperationBlock:
     output_path: Path
 
     def to_front_matter(self) -> str:
-        models_in = ", ".join(self.models_in) if self.models_in else "(none)"
-        models_out = ", ".join(self.models_out) if self.models_out else "(none)"
+        models_in = (
+            ", ".join(self.models_in) if self.models_in else "(none)"
+        )
+        models_out = (
+            ", ".join(self.models_out) if self.models_out else "(none)"
+        )
         return (
             "<!--\n"
             f"block_id: {self.block_id}\n"
@@ -59,7 +63,10 @@ class SchemaBlock:
     output_path: Path | None = None
 
     def to_metadata_comment(self) -> str:
-        return f"<!-- block_type:schema name:{self.name} sha:{self.sha} -->\n"
+        return (
+            f"<!-- block_type:schema name:{self.name} "
+            f"sha:{self.sha} -->\n"
+        )
 
 
 def ensure_list(value: Iterable[Any] | None) -> list[Any]:

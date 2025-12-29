@@ -6,7 +6,12 @@ from pathlib import Path
 from typing import Any
 
 from .models import OperationBlock, SchemaBlock
-from .utils import collect_parameters, extract_models, extract_ref_name, normalize_path_to_slug
+from .utils import (
+    collect_parameters,
+    extract_models,
+    extract_ref_name,
+    normalize_path_to_slug,
+)
 
 VALID_METHODS = {"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"}
 
@@ -45,7 +50,10 @@ def parse_operations(
             tag_dir = out_dir / tag
             output_path = tag_dir / page_name
 
-            parameters = collect_parameters(path_params, operation.get("parameters"))
+            parameters = collect_parameters(
+                path_params,
+                operation.get("parameters"),
+            )
             normalized_params = [normalize_parameter(p) for p in parameters]
             request_body = operation.get("requestBody")
             normalized_bodies = normalize_request_bodies(request_body)
@@ -102,7 +110,9 @@ def normalize_parameter(raw: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def normalize_request_bodies(request_body: dict[str, Any] | None) -> list[dict[str, Any]]:
+def normalize_request_bodies(
+    request_body: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
     results: list[dict[str, Any]] = []
     if not request_body:
         return results
@@ -130,7 +140,11 @@ def normalize_request_bodies(request_body: dict[str, Any] | None) -> list[dict[s
 
 def normalize_responses(responses: dict[str, Any]) -> list[dict[str, Any]]:
     normalized: list[dict[str, Any]] = []
-    for status, payload in sorted(responses.items(), key=lambda item: status_order_key(item[0])):
+    sorted_responses = sorted(
+        responses.items(),
+        key=lambda item: status_order_key(item[0]),
+    )
+    for status, payload in sorted_responses:
         if not isinstance(payload, dict):
             payload = {}
         description = payload.get("description")
@@ -177,7 +191,10 @@ def collect_examples(info: dict[str, Any] | None) -> list[dict[str, Any]]:
     return examples
 
 
-def build_type_label(type_value: str | None, format_value: str | None) -> str | None:
+def build_type_label(
+    type_value: str | None,
+    format_value: str | None,
+) -> str | None:
     if not type_value:
         return None
     if format_value:
@@ -185,7 +202,12 @@ def build_type_label(type_value: str | None, format_value: str | None) -> str | 
     return type_value
 
 
-def build_block_id(tag: str, operation_id: str | None, method: str, path: str) -> str:
+def build_block_id(
+    tag: str,
+    operation_id: str | None,
+    method: str,
+    path: str,
+) -> str:
     if operation_id:
         stem = operation_id.replace(" ", "_")
     else:
@@ -219,13 +241,18 @@ def parse_schemas(
         block = SchemaBlock(
             name=name,
             description=schema.get("description"),
-            properties=normalize_properties(schema.get("properties"), schema.get("required")),
+            properties=normalize_properties(
+                schema.get("properties"),
+                schema.get("required"),
+            ),
             any_of=normalize_variants(schema.get("anyOf")),
             one_of=normalize_variants(schema.get("oneOf")),
             all_of=normalize_variants(schema.get("allOf")),
             examples=extract_schema_examples(schema),
             sha=sha,
-            output_path=out_dir / "components" / "schemas" / f"{name}.html",
+            output_path=(
+                out_dir / "components" / "schemas" / f"{name}.html"
+            ),
         )
         results.append(block)
 
@@ -241,11 +268,26 @@ def normalize_properties(
     required_set = set(required or [])
     normalized: list[dict[str, Any]] = []
     for name, schema in sorted(props.items()):
-        ref_name = extract_ref_name(schema.get("$ref")) if isinstance(schema, dict) else None
+        ref_name = (
+            extract_ref_name(schema.get("$ref"))
+            if isinstance(schema, dict)
+            else None
+        )
         entry = {
             "name": name,
-            "description": schema.get("description") if isinstance(schema, dict) else None,
-            "type": build_type_label(schema.get("type"), schema.get("format")) if isinstance(schema, dict) else None,
+            "description": (
+                schema.get("description")
+                if isinstance(schema, dict)
+                else None
+            ),
+            "type": (
+                build_type_label(
+                    schema.get("type"),
+                    schema.get("format"),
+                )
+                if isinstance(schema, dict)
+                else None
+            ),
             "required": name in required_set,
             "enum": schema.get("enum") if isinstance(schema, dict) else None,
             "schema_ref": ref_name,

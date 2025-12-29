@@ -9,12 +9,20 @@ from .builder import BuildConfig, build
 from .spec import DEFAULT_SPEC_URL, SpecLoadError
 
 
-@click.group(help="Tools for compiling the OpenAI OpenAPI spec into LLM-friendly blocks.")
+@click.group(
+    help=(
+        "Tools for compiling the OpenAI OpenAPI spec into LLM-friendly "
+        "blocks."
+    )
+)
 def cli() -> None:
     pass
 
 
-@cli.command("build", help="Fetch the OpenAI OpenAPI spec and render HTML blocks.")
+@cli.command(
+    "build",
+    help="Fetch the OpenAI OpenAPI spec and render HTML blocks.",
+)
 @click.option(
     "--spec-url",
     type=str,
@@ -43,7 +51,10 @@ def cli() -> None:
     type=int,
     default=1500,
     show_default=True,
-    help="Target maximum number of tokens per block (used for future truncation logic).",
+    help=(
+        "Target maximum number of tokens per block (used for future "
+        "truncation logic)."
+    ),
 )
 def build_command(
     spec_url: str,
@@ -64,7 +75,8 @@ def build_command(
         raise click.ClickException(str(exc)) from exc
 
     click.echo(
-        f"Generated {result['block_count']} blocks and {result['schema_count']} schemas "
+        f"Generated {result['block_count']} blocks and "
+        f"{result['schema_count']} schemas "
         f"(spec sha {result['spec_sha']})"
     )
 

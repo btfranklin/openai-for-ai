@@ -39,7 +39,14 @@ def build(config: BuildConfig) -> dict[str, Any]:
         if schema.output_path is not None
     }
 
-    _write_operations(out_dir, operations, schema_paths, sha, build_date, config.languages)
+    _write_operations(
+        out_dir,
+        operations,
+        schema_paths,
+        sha,
+        build_date,
+        config.languages,
+    )
     _write_schemas(out_dir, schemas, schema_paths, sha, build_date)
     _write_indexes(out_dir, operations, schema_paths, sha, build_date)
 
@@ -111,12 +118,18 @@ def _write_indexes(
     (out_dir / "llms.txt").write_text(llms_txt, encoding="utf-8")
 
     manifest = _build_manifest(operations)
-    (out_dir / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    (out_dir / "manifest.json").write_text(
+        json.dumps(manifest, indent=2),
+        encoding="utf-8",
+    )
 
     blocks_dir = out_dir / "blocks"
     blocks_dir.mkdir(parents=True, exist_ok=True)
     blocks_json = _build_blocks_index(operations, sha, build_date)
-    (blocks_dir / "index.json").write_text(json.dumps(blocks_json, indent=2), encoding="utf-8")
+    (blocks_dir / "index.json").write_text(
+        json.dumps(blocks_json, indent=2),
+        encoding="utf-8",
+    )
 
     sitemap = _build_sitemap(operations, schema_paths)
     (out_dir / "sitemap.xml").write_text(sitemap, encoding="utf-8")
@@ -126,16 +139,21 @@ def _render_llms_index(operations: OperationParseResult) -> str:
     lines = [
         "# OpenAI API Endpoint Blocks",
         "",
-        "> Deterministic HTML blocks extracted from the official OpenAI OpenAPI specification.",
+        "> Deterministic HTML blocks extracted from the official OpenAI "
+        "OpenAPI specification.",
         "",
-        "This site publishes machine-friendly slices of the OpenAI API reference. Each block keeps token counts low,",
-        "uses predictable markup, and links back to related operations and schemas for agent workflows.",
+        "This site publishes machine-friendly slices of the OpenAI API "
+        "reference. Each block keeps token counts low, uses predictable "
+        "markup, and links back to related operations and schemas for agent "
+        "workflows.",
         "",
         "## Essential Entry Points",
         "",
         "- [Overview](/index.html): Tag-organised landing page",
-        "- [Manifest](/manifest.json): Operation lookup map (operationId → URL)",
-        "- [Block Catalog](/blocks/index.json): JSON index of every operation block",
+        "- [Manifest](/manifest.json): Operation lookup map (operationId "
+        "→ URL)",
+        "- [Block Catalog](/blocks/index.json): JSON index of every operation "
+        "block",
         "- [Sitemap](/sitemap.xml): URL manifest for crawlers",
         "",
         "## Tags",
@@ -149,7 +167,9 @@ def _render_llms_index(operations: OperationParseResult) -> str:
         primary = ops[0]
         summary = primary.summary or "First available operation"
         lines.append(
-            f"- **{tag}** — {len(ops)} operations. Start with [{primary.method} {primary.path}](/{primary.tag}/{primary.output_path.name}): {summary}"
+            f"- **{tag}** — {len(ops)} operations. Start with "
+            f"[{primary.method} {primary.path}]"
+            f"(/{primary.tag}/{primary.output_path.name}): {summary}"
         )
 
     lines.extend([
@@ -162,7 +182,8 @@ def _render_llms_index(operations: OperationParseResult) -> str:
         descriptor = (op.summary or op.description or "").strip()
         descriptor_text = f" — {descriptor}" if descriptor else ""
         lines.append(
-            f"- [{op.block_id}](/{op.tag}/{op.output_path.name}): {op.method} {op.path}{descriptor_text}"
+            f"- [{op.block_id}](/{op.tag}/{op.output_path.name}): "
+            f"{op.method} {op.path}{descriptor_text}"
         )
 
     return "\n".join(lines)
@@ -223,8 +244,12 @@ def _build_sitemap(
     urls.append("<url><loc>/index.html</loc></url>")
     urls.append("<url><loc>/llms.txt</loc></url>")
     for op in operations.all_operations:
-        urls.append(f"<url><loc>/{op.tag}/{op.output_path.name}</loc></url>")
+        urls.append(
+            f"<url><loc>/{op.tag}/{op.output_path.name}</loc></url>"
+        )
     for name in sorted(schema_paths.keys()):
-        urls.append(f"<url><loc>/components/schemas/{name}.html</loc></url>")
+        urls.append(
+            f"<url><loc>/components/schemas/{name}.html</loc></url>"
+        )
     urls.append("</urlset>")
     return "\n".join(urls)

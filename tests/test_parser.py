@@ -23,7 +23,10 @@ class ParserTests(unittest.TestCase):
                                 "content": {
                                     "application/json": {
                                         "schema": {
-                                            "$ref": "#/components/schemas/ListAssistantsResponse"
+                                            "$ref": (
+                                                "#/components/schemas/"
+                                                "ListAssistantsResponse"
+                                            )
                                         }
                                     }
                                 },
@@ -39,7 +42,9 @@ class ParserTests(unittest.TestCase):
                         "properties": {
                             "data": {
                                 "type": "array",
-                                "description": "Assistants available to the user.",
+                                "description": (
+                                    "Assistants available to the user."
+                                ),
                             }
                         },
                         "required": ["data"],
@@ -62,7 +67,8 @@ class ParserTests(unittest.TestCase):
         self.assertEqual(block.tag, "Assistants")
         self.assertEqual(block.responses[0]["status"], "200")
         self.assertEqual(
-            block.responses[0]["content"][0]["schema_ref"], "ListAssistantsResponse"
+            block.responses[0]["content"][0]["schema_ref"],
+            "ListAssistantsResponse",
         )
 
     def test_parse_schemas_includes_required(self) -> None:

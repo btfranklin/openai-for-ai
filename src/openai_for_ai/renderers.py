@@ -48,9 +48,17 @@ def render_operation(
     template = env.get_template("operation.html.j2")
 
     parameter_groups = build_parameter_groups(block)
-    request_bodies = annotate_schema_hrefs(block.request_bodies, block.output_path, schema_paths)
+    request_bodies = annotate_schema_hrefs(
+        block.request_bodies,
+        block.output_path,
+        schema_paths,
+    )
     responses = annotate_responses(block, schema_paths)
-    filtered_examples = {lang: code for lang, code in block.examples.items() if lang in languages}
+    filtered_examples = {
+        lang: code
+        for lang, code in block.examples.items()
+        if lang in languages
+    }
 
     sibling_links = [
         {
@@ -69,10 +77,17 @@ def render_operation(
     for response in responses:
         for content in response["content"]:
             if content.get("schema_href") and content.get("schema_name"):
-                component_refs.add((content["schema_name"], content["schema_href"]))
+                component_refs.add(
+                    (content["schema_name"], content["schema_href"])
+                )
 
+    sorted_components = sorted(
+        component_refs,
+        key=lambda item: item[0],
+    )
     referenced_components = [
-        {"label": name, "url": href} for name, href in sorted(component_refs, key=lambda item: item[0])
+        {"label": name, "url": href}
+        for name, href in sorted_components
     ]
 
     context = {
@@ -102,9 +117,21 @@ def render_schema(
     template = env.get_template("schema.html.j2")
 
     properties = annotate_schema_properties(schema, schema_paths)
-    any_of = annotate_schema_variants(schema.any_of, schema_paths, schema.output_path)
-    one_of = annotate_schema_variants(schema.one_of, schema_paths, schema.output_path)
-    all_of = annotate_schema_variants(schema.all_of, schema_paths, schema.output_path)
+    any_of = annotate_schema_variants(
+        schema.any_of,
+        schema_paths,
+        schema.output_path,
+    )
+    one_of = annotate_schema_variants(
+        schema.one_of,
+        schema_paths,
+        schema.output_path,
+    )
+    all_of = annotate_schema_variants(
+        schema.all_of,
+        schema_paths,
+        schema.output_path,
+    )
 
     context = {
         "schema": schema,
@@ -165,7 +192,13 @@ def annotate_schema_hrefs(
             if target:
                 schema_href = relative_url(from_path, target)
 
-        annotated.append({**body, "schema_href": schema_href, "schema_name": schema_name})
+        annotated.append(
+            {
+                **body,
+                "schema_href": schema_href,
+                "schema_name": schema_name,
+            }
+        )
     return annotated
 
 
@@ -183,7 +216,13 @@ def annotate_responses(
                 target = schema_paths.get(ref_name)
                 if target:
                     schema_href = relative_url(block.output_path, target)
-            content_items.append({**content, "schema_href": schema_href, "schema_name": schema_name})
+            content_items.append(
+                {
+                    **content,
+                    "schema_href": schema_href,
+                    "schema_name": schema_name,
+                }
+            )
         annotated.append({**response, "content": content_items})
     return annotated
 
@@ -224,11 +263,23 @@ def annotate_schema_variants(
                     schema_href = target.name
         normalized = {**variant, "schema_href": schema_href}
         if variant.get("any_of"):
-            normalized["any_of"] = annotate_schema_variants(variant["any_of"], schema_paths, base_path)
+            normalized["any_of"] = annotate_schema_variants(
+                variant["any_of"],
+                schema_paths,
+                base_path,
+            )
         if variant.get("one_of"):
-            normalized["one_of"] = annotate_schema_variants(variant["one_of"], schema_paths, base_path)
+            normalized["one_of"] = annotate_schema_variants(
+                variant["one_of"],
+                schema_paths,
+                base_path,
+            )
         if variant.get("all_of"):
-            normalized["all_of"] = annotate_schema_variants(variant["all_of"], schema_paths, base_path)
+            normalized["all_of"] = annotate_schema_variants(
+                variant["all_of"],
+                schema_paths,
+                base_path,
+            )
         annotated.append(normalized)
     return annotated
 

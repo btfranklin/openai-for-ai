@@ -8,7 +8,10 @@ import hashlib
 import httpx
 import yaml
 
-DEFAULT_SPEC_URL = "https://app.stainless.com/api/spec/documented/openai/openapi.documented.yml"
+DEFAULT_SPEC_URL = (
+    "https://app.stainless.com/api/spec/documented/openai/"
+    "openapi.documented.yml"
+)
 
 
 class SpecLoadError(RuntimeError):
@@ -50,7 +53,10 @@ def load_spec(
         with httpx.Client(timeout=timeout, follow_redirects=True) as client:
             response = client.get(spec_url, headers=headers)
 
-            if response.status_code == httpx.codes.NOT_MODIFIED and spec_path.exists():
+            if (
+                response.status_code == httpx.codes.NOT_MODIFIED
+                and spec_path.exists()
+            ):
                 raw_text = spec_path.read_text()
             else:
                 response.raise_for_status()
@@ -59,7 +65,9 @@ def load_spec(
                 if etag := response.headers.get("ETag"):
                     etag_path.write_text(etag)
     except (httpx.HTTPError, OSError) as exc:
-        raise SpecLoadError(f"Failed to fetch spec from {spec_url}") from exc
+        raise SpecLoadError(
+            f"Failed to fetch spec from {spec_url}"
+        ) from exc
 
     try:
         parsed = yaml.safe_load(raw_text)
@@ -71,7 +79,9 @@ def load_spec(
 
     version = str(parsed.get("openapi", ""))
     if not version.startswith("3.1"):
-        raise SpecLoadError(f"Unsupported OpenAPI version '{version}'. Expected 3.1.x.")
+        raise SpecLoadError(
+            f"Unsupported OpenAPI version '{version}'. Expected 3.1.x."
+        )
 
     sha = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()[:12]
 
@@ -82,19 +92,27 @@ def _load_local_spec(path: Path) -> tuple[dict[str, Any], str]:
     try:
         raw_text = path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise SpecLoadError(f"Failed to read local spec at {path}") from exc
+        raise SpecLoadError(
+            f"Failed to read local spec at {path}"
+        ) from exc
 
     try:
         parsed = yaml.safe_load(raw_text)
     except yaml.YAMLError as exc:
-        raise SpecLoadError(f"Spec at {path} is not valid YAML") from exc
+        raise SpecLoadError(
+            f"Spec at {path} is not valid YAML"
+        ) from exc
 
     if not isinstance(parsed, dict):
-        raise SpecLoadError(f"Spec at {path} root document must be a mapping")
+        raise SpecLoadError(
+            f"Spec at {path} root document must be a mapping"
+        )
 
     version = str(parsed.get("openapi", ""))
     if not version.startswith("3.1"):
-        raise SpecLoadError(f"Unsupported OpenAPI version '{version}'. Expected 3.1.x.")
+        raise SpecLoadError(
+            f"Unsupported OpenAPI version '{version}'. Expected 3.1.x."
+        )
 
     sha = hashlib.sha256(raw_text.encode("utf-8")).hexdigest()[:12]
     return parsed, sha

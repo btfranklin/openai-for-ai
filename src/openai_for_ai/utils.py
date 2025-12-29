@@ -19,8 +19,13 @@ def normalize_path_to_slug(path: str) -> str:
     return slug.strip("-")
 
 
-def collect_parameters(*sources: Iterable[dict[str, Any]] | None) -> list[dict[str, Any]]:
-    """Merge parameter definitions, preserving order and removing duplicates by (name, in)."""
+def collect_parameters(
+    *sources: Iterable[dict[str, Any]] | None,
+) -> list[dict[str, Any]]:
+    """Merge parameter definitions, preserving order and removing duplicates.
+
+    Deduplication uses (name, in).
+    """
     seen: set[tuple[str, str]] = set()
     merged: list[dict[str, Any]] = []
     for params in sources:
@@ -39,7 +44,10 @@ def collect_parameters(*sources: Iterable[dict[str, Any]] | None) -> list[dict[s
     return merged
 
 
-def extract_ref_name(ref: str | None, prefix: str = "#/components/schemas/") -> str | None:
+def extract_ref_name(
+    ref: str | None,
+    prefix: str = "#/components/schemas/",
+) -> str | None:
     if not ref:
         return None
     if ref.startswith(prefix):
@@ -56,7 +64,11 @@ def extract_models(
 
     if request_body and "content" in request_body:
         for content_info in request_body["content"].values():
-            schema = content_info.get("schema") if isinstance(content_info, dict) else None
+            schema = (
+                content_info.get("schema")
+                if isinstance(content_info, dict)
+                else None
+            )
             if not schema:
                 continue
             if ref := extract_ref_name(schema.get("$ref")):
@@ -64,11 +76,19 @@ def extract_models(
 
     if responses:
         for resp in responses.values():
-            contents = resp.get("content") if isinstance(resp, dict) else None
+            contents = (
+                resp.get("content")
+                if isinstance(resp, dict)
+                else None
+            )
             if not contents:
                 continue
             for content_info in contents.values():
-                schema = content_info.get("schema") if isinstance(content_info, dict) else None
+                schema = (
+                    content_info.get("schema")
+                    if isinstance(content_info, dict)
+                    else None
+                )
                 if not schema:
                     continue
                 if ref := extract_ref_name(schema.get("$ref")):
@@ -82,7 +102,7 @@ def ensure_trailing_slash(path: str) -> str:
 
 
 def markdown_links_to_html(text: str | None) -> Markup:
-    """Convert inline Markdown links to HTML anchor tags while escaping other content."""
+    """Convert inline Markdown links while escaping the rest."""
 
     if not text:
         return Markup("")
