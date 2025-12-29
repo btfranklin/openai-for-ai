@@ -4,7 +4,11 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from openai_for_ai.parser import parse_operations, parse_schemas
+from openai_for_ai.parser import (
+    collect_examples,
+    parse_operations,
+    parse_schemas,
+)
 
 
 class ParserTests(unittest.TestCase):
@@ -104,6 +108,54 @@ class ParserTests(unittest.TestCase):
         union = next(s for s in schemas if s.name == "Union")
         self.assertEqual(union.any_of[0]["schema_ref"], "Foo")
         self.assertEqual(union.any_of[1]["schema"].get("type"), "string")
+
+    def test_parse_operations_resolves_parameter_refs(self) -> None:
+        spec = {
+            "openapi": "3.1.0",
+            "paths": {
+                "/widgets": {
+                    "get": {
+                        "parameters": [
+                            {"$ref": "#/components/parameters/LimitParam"}
+                        ],
+                        "responses": {"200": {"description": "OK"}},
+                    }
+                }
+            },
+            "components": {
+                "parameters": {
+                    "LimitParam": {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Max results",
+                        "schema": {"type": "integer"},
+                    }
+                }
+            },
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            out_dir = Path(tmpdir)
+            result = parse_operations(spec, sha="123abc", out_dir=out_dir)
+
+        block = result.all_operations[0]
+        self.assertEqual(len(block.parameters), 1)
+        param = block.parameters[0]
+        self.assertEqual(param["name"], "limit")
+        self.assertEqual(param["in"], "query")
+        self.assertEqual(param["type"], "integer")
+        self.assertEqual(param["description"], "Max results")
+
+    def test_collect_examples_includes_falsy_values(self) -> None:
+        examples = collect_examples({"example": 0})
+        self.assertEqual(examples[0]["label"], "default")
+        self.assertEqual(examples[0]["value"], 0)
+
+        examples = collect_examples({"example": ""})
+        self.assertEqual(examples[0]["value"], "")
+
+        examples = collect_examples({"example": False})
+        self.assertEqual(examples[0]["value"], False)
 
 
 if __name__ == "__main__":  # pragma: no cover

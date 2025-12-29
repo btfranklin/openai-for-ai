@@ -53,11 +53,16 @@ def load_spec(
         with httpx.Client(timeout=timeout, follow_redirects=True) as client:
             response = client.get(spec_url, headers=headers)
 
-            if (
-                response.status_code == httpx.codes.NOT_MODIFIED
-                and spec_path.exists()
-            ):
-                raw_text = spec_path.read_text()
+            if response.status_code == httpx.codes.NOT_MODIFIED:
+                if spec_path.exists():
+                    raw_text = spec_path.read_text()
+                else:
+                    response = client.get(spec_url)
+                    response.raise_for_status()
+                    raw_text = response.text
+                    spec_path.write_text(raw_text)
+                    if etag := response.headers.get("ETag"):
+                        etag_path.write_text(etag)
             else:
                 response.raise_for_status()
                 raw_text = response.text

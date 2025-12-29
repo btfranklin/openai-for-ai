@@ -31,11 +31,20 @@ def parse_operations(
     by_tag: dict[str, list[OperationBlock]] = {}
     all_ops: list[OperationBlock] = []
 
+    components = spec.get("components")
+    component_params = (
+        components.get("parameters") or {}
+        if isinstance(components, dict)
+        else {}
+    )
     paths = spec.get("paths", {}) or {}
     for path, path_item in sorted(paths.items()):
         if not isinstance(path_item, dict):
             continue
-        path_params = path_item.get("parameters")
+        path_params = resolve_parameters(
+            path_item.get("parameters"),
+            component_params,
+        )
         for method, operation in path_item.items():
             method_upper = method.upper()
             if method_upper not in VALID_METHODS:
@@ -50,10 +59,11 @@ def parse_operations(
             tag_dir = out_dir / tag
             output_path = tag_dir / page_name
 
-            parameters = collect_parameters(
-                path_params,
+            op_params = resolve_parameters(
                 operation.get("parameters"),
+                component_params,
             )
+            parameters = collect_parameters(path_params, op_params)
             normalized_params = [normalize_parameter(p) for p in parameters]
             request_body = operation.get("requestBody")
             normalized_bodies = normalize_request_bodies(request_body)
@@ -176,8 +186,10 @@ def collect_examples(info: dict[str, Any] | None) -> list[dict[str, Any]]:
         return []
 
     examples: list[dict[str, Any]] = []
-    if example := info.get("example"):
-        examples.append({"label": "default", "value": example})
+    if "example" in info:
+        example_value = info.get("example")
+        if example_value is not None:
+            examples.append({"label": "default", "value": example_value})
 
     info_examples = info.get("examples")
     if isinstance(info_examples, dict):
@@ -353,3 +365,26 @@ def normalize_variants(variants: Any) -> list[dict[str, Any]]:
             }
         )
     return normalized
+
+
+def resolve_parameters(
+    params: Iterable[dict[str, Any]] | None,
+    component_params: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not params:
+        return []
+    resolved: list[dict[str, Any]] = []
+    for param in params:
+        if not isinstance(param, dict):
+            continue
+        if "$ref" in param:
+            ref_name = extract_ref_name(
+                param.get("$ref"),
+                prefix="#/components/parameters/",
+            )
+            target = component_params.get(ref_name) if ref_name else None
+            if isinstance(target, dict):
+                resolved.append(target)
+            continue
+        resolved.append(param)
+    return resolved
