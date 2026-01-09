@@ -28,6 +28,12 @@ classifiers = [
     "Topic :: Software Development :: Code Generators",
 ]
 
+[project.urls]
+Homepage = "https://github.com/btfranklin/openai-for-ai"
+Issues = "https://github.com/btfranklin/openai-for-ai/issues"
+Changelog = "https://github.com/btfranklin/openai-for-ai/releases"
+Repository = "https://github.com/btfranklin/openai-for-ai.git"
+
 [project.scripts]
 openai-for-ai = "openai_for_ai.cli:main"
 
@@ -41,9 +47,12 @@ distribution = true
 [dependency-groups]
 dev = [
     "pytest>=9.0.2",
-    "flake8>=7.3.0",
+    "ruff>=0.14.11",
 ]
 
 [tool.pdm.scripts]
 test = "pytest"
-lint = "flake8 src tests"
+lint = "ruff check src tests"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
