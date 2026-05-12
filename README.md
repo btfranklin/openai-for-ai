@@ -5,6 +5,12 @@
 
 A CLI for compiling the OpenAI OpenAPI specification into deterministic, LLM-friendly HTML blocks and discovery manifests.
 
+## Archive Note
+
+This repository is archived as of May 12, 2026. It is kept for historical/reference purposes.
+
+OpenAI-provided documentation skills and MCP tools can now retrieve current OpenAI API and product guidance directly from OpenAI. For current work, use the `openai-docs` skill and the OpenAI docs MCP tools such as `search_openai_docs`, `fetch_openai_doc`, `list_openai_docs`, and `list_api_endpoints`.
+
 ## Usage
 
 ```shell
